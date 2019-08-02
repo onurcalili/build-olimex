@@ -163,15 +163,21 @@ compile_uboot()
 		# armbian specifics u-boot settings
 		[[ -f .config ]] && sed -i 's/CONFIG_LOCALVERSION=""/CONFIG_LOCALVERSION="-armbian"/g' .config
 		[[ -f .config ]] && sed -i 's/CONFIG_LOCALVERSION_AUTO=.*/# CONFIG_LOCALVERSION_AUTO is not set/g' .config
-		if [[ $BOOTBRANCH =~ ^tag:v201[8-9](.*) ]]; then
-			[[ -f .config ]] && sed -i 's/^.*CONFIG_ENV_IS_IN_FAT.*/# CONFIG_ENV_IS_IN_FAT is not set/g' .config
-			[[ -f .config ]] && sed -i 's/^.*CONFIG_ENV_IS_IN_EXT4.*/CONFIG_ENV_IS_IN_EXT4=y/g' .config
-			[[ -f .config ]] && sed -i 's/^.*CONFIG_ENV_IS_IN_MMC.*/# CONFIG_ENV_IS_IN_MMC is not set/g' .config
-			[[ -f .config ]] && sed -i 's/^.*CONFIG_ENV_IS_NOWHERE.*/# CONFIG_ENV_IS_NOWHERE is not set/g' .config | echo "# CONFIG_ENV_IS_NOWHERE is not set" >> .config
-			[[ -f .config ]] && echo 'CONFIG_ENV_EXT4_INTERFACE="mmc"' >> .config
-			[[ -f .config ]] && echo 'CONFIG_ENV_EXT4_DEVICE_AND_PART="0:auto"' >> .config
-			[[ -f .config ]] && echo 'CONFIG_ENV_EXT4_FILE="/boot/boot.env"' >> .config
+
+		# for modern kernel and non spi targets
+		if [[ ${BOOTBRANCH} =~ ^tag:v201[8-9](.*) && ${target} != "spi" && -f .config ]]; then
+
+			sed -i 's/^.*CONFIG_ENV_IS_IN_FAT.*/# CONFIG_ENV_IS_IN_FAT is not set/g' .config
+			sed -i 's/^.*CONFIG_ENV_IS_IN_EXT4.*/CONFIG_ENV_IS_IN_EXT4=y/g' .config
+			sed -i 's/^.*CONFIG_ENV_IS_IN_MMC.*/# CONFIG_ENV_IS_IN_MMC is not set/g' .config
+			sed -i 's/^.*CONFIG_ENV_IS_NOWHERE.*/# CONFIG_ENV_IS_NOWHERE is not set/g' .config | echo \
+			"# CONFIG_ENV_IS_NOWHERE is not set" >> .config
+			echo 'CONFIG_ENV_EXT4_INTERFACE="mmc"' >> .config
+			echo 'CONFIG_ENV_EXT4_DEVICE_AND_PART="0:auto"' >> .config
+			echo 'CONFIG_ENV_EXT4_FILE="/boot/boot.env"' >> .config
+
 		fi
+
 		[[ -f tools/logos/udoo.bmp ]] && cp $SRC/packages/blobs/splash/udoo.bmp tools/logos/udoo.bmp
 		touch .scmversion
 
@@ -279,75 +285,8 @@ compile_kernel()
 	# read kernel version
 	local version=$(grab_version "$kerneldir")
 
-	# add WireGuard
-	if linux-version compare $version ge 3.14 && [ "$WIREGUARD" == yes ]; then
-			display_alert "Adding" "WireGuard" "info"
-			rm -rf $SRC/cache/sources/$LINUXSOURCEDIR/net/wireguard
-			cp -R $SRC/cache/sources/wireguard/src/ $SRC/cache/sources/$LINUXSOURCEDIR/net/wireguard
-			sed -i "/^obj-\\\$(CONFIG_NETFILTER).*+=/a obj-\$(CONFIG_WIREGUARD) += wireguard/" "$SRC/cache/sources/$LINUXSOURCEDIR/net/Makefile"
-			sed -i "/^if INET\$/a source \"net/wireguard/Kconfig\"" "$SRC/cache/sources/$LINUXSOURCEDIR/net/Kconfig"
-			# remove duplicates
-			[[ $(cat $SRC/cache/sources/$LINUXSOURCEDIR/net/Makefile | grep wireguard | wc -l) -gt 1 ]] && \
-			sed -i '0,/wireguard/{/wireguard/d;}' $SRC/cache/sources/$LINUXSOURCEDIR/net/Makefile
-			[[ $(cat $SRC/cache/sources/$LINUXSOURCEDIR/net/Kconfig | grep wireguard | wc -l) -gt 1 ]] && \
-			sed -i '0,/wireguard/{/wireguard/d;}' $SRC/cache/sources/$LINUXSOURCEDIR/net/Kconfig
-			# headers workaround
-			display_alert "Patching WireGuard" "Applying workaround for headers compilation" "info"
-			sed -i '/mkdir -p "$destdir"/a mkdir -p "$destdir"/net/wireguard; touch "$destdir"/net/wireguard/{Kconfig,Makefile} # workaround for Wireguard' $SRC/cache/sources/$LINUXSOURCEDIR/scripts/package/builddeb
-	fi
-
-	# add drivers for Realtek 8811, 8812, 8814 and 8821 chipsets
-	if linux-version compare $version ge 3.14 && [ "$RTL8812AU" == yes ]; then
-		display_alert "Adding" "Wireless drivers for Realtek 8811, 8812, 8814 and 8821 chipsets" "info"
-		rm -rf $SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/rtl8812au
-		mkdir -p $SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/rtl8812au/
-		cp -R $SRC/cache/sources/rtl8812au/{core,hal,include,os_dep,platform,modules.order} $SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/rtl8812au
-
-		# Makefile
-		cp $SRC/cache/sources/rtl8812au/Makefile $SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/rtl8812au/Makefile
-		cp $SRC/cache/sources/rtl8812au/Kconfig $SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/rtl8812au/Kconfig
-
-		# Adjust path
-		sed -i 's/include $(TopDIR)\/hal\/phydm\/phydm.mk/include $(TopDIR)\/drivers\/net\/wireless\/rtl8812au\/hal\/phydm\/phydm.mk/' \
-		$SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/rtl8812au/Makefile
-
-		# Add to section Makefile
-		sed -i '/obj-$(CONFIG_.*ATMEL).*/a obj-$(CONFIG_RTL8812AU) += rtl8812au/' \
-		$SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/Makefile
-		sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8812au\/Kconfig"' \
-		$SRC/cache/sources/$LINUXSOURCEDIR/drivers/net/wireless/Kconfig
-	fi
-
-	# Add sunxi-mali only for sunxi64
-	if [[ $LINUXFAMILY == sunxi64 && "$SUNXI_MALI" == yes ]]; then
-		display_alert "Adding" "Mali drivers for Allwinner SoC" "info"
-
-		cd $SRC/cache/sources/sunxi-mali
-
-		# Cleanup
-		git reset --hard HEAD > /dev/null 2>&1
-		git clean -fd  > /dev/null 2>&1
-
-		# Patch sources
-		# KDIR=$SRC/cache/sources/$LINUXSOURCEDIR ARCH=$ARCHITECTURE CROSS_COMPILE=$KERNEL_COMPILER
-		./build.sh -r r6p2 -a >>$DEST/debug/compilation.log 2>&1
-		if [[ $? -ne 0 ]]; then
-			exit_with_error "Failed to patch sunxi-mali" "@host"
-		fi
-
-		# Modify default values
-		sed -i "s/USING_DEVFREQ ?= 0/USING_DEVFREQ ?= 1/g" r6p2/src/devicedrv/mali/Makefile
-		sed -i "s/CONFIG_ARCH_EXYNOS4/CONFIG_ARCH_SUNXI/g" r6p2/src/devicedrv/mali/Kbuild
-		sed -i "s/export MALI_PLATFORM=exynos4/export MALI_PLATFORM=sunxi/g" r6p2/src/devicedrv/mali/Kbuild
-		cd - > /dev/null
-
-		# Copy sources to kernel tree
-		cp -rf $SRC/cache/sources/sunxi-mali/r6p2/src/devicedrv/mali $SRC/cache/sources/$LINUXSOURCEDIR/drivers/gpu/
-
-		# Add mali path
-		sed -i "s/obj-y.*/obj-y                   += drm\/ vga\/ mali\//g" drivers/gpu/Makefile
-		sed -i "/source \"drivers\/gpu\/vga\/Kconfig\"/a source \"drivers\/gpu\/mali\/Kconfig\"" drivers/video/Kconfig
-	fi
+	# build 3rd party drivers
+	compilation_prepare
 
 	# create linux-source package - with already patched sources
 	local sources_pkg_dir=$SRC/.tmp/${CHOSEN_KSRC}_${REVISION}_all
@@ -377,9 +316,9 @@ compile_kernel()
 		display_alert "Using previous kernel config" "$DEST/config/$LINUXCONFIG.config" "info"
 		cp $DEST/config/$LINUXCONFIG.config .config
 	else
-		if [[ -f $SRC/userpatches/$LINUXCONFIG.config ]]; then
+		if [[ -f $USERPATCHES_PATH/$LINUXCONFIG.config ]]; then
 			display_alert "Using kernel config provided by user" "userpatches/$LINUXCONFIG.config" "info"
-			cp $SRC/userpatches/$LINUXCONFIG.config .config
+			cp $USERPATCHES_PATH/$LINUXCONFIG.config .config
 		else
 			display_alert "Using kernel config file" "config/kernel/$LINUXCONFIG.config" "info"
 			cp $SRC/config/kernel/$LINUXCONFIG.config .config
@@ -576,10 +515,10 @@ find_toolchain()
 # <description>: additional description text
 #
 # priority:
-# $SRC/userpatches/<dest>/<family>/target_<target>
-# $SRC/userpatches/<dest>/<family>/board_<board>
-# $SRC/userpatches/<dest>/<family>/branch_<branch>
-# $SRC/userpatches/<dest>/<family>
+# $USERPATCHES_PATH/<dest>/<family>/target_<target>
+# $USERPATCHES_PATH/<dest>/<family>/board_<board>
+# $USERPATCHES_PATH/<dest>/<family>/branch_<branch>
+# $USERPATCHES_PATH/<dest>/<family>
 # $SRC/patch/<dest>/<family>/target_<target>
 # $SRC/patch/<dest>/<family>/board_<board>
 # $SRC/patch/<dest>/<family>/branch_<branch>
@@ -599,10 +538,10 @@ advanced_patch()
 
 	local names=()
 	local dirs=(
-		"$SRC/userpatches/$dest/$family/target_${target}:[\e[33mu\e[0m][\e[34mt\e[0m]"
-		"$SRC/userpatches/$dest/$family/board_${board}:[\e[33mu\e[0m][\e[35mb\e[0m]"
-		"$SRC/userpatches/$dest/$family/branch_${branch}:[\e[33mu\e[0m][\e[33mb\e[0m]"
-		"$SRC/userpatches/$dest/$family:[\e[33mu\e[0m][\e[32mc\e[0m]"
+		"$USERPATCHES_PATH/$dest/$family/target_${target}:[\e[33mu\e[0m][\e[34mt\e[0m]"
+		"$USERPATCHES_PATH/$dest/$family/board_${board}:[\e[33mu\e[0m][\e[35mb\e[0m]"
+		"$USERPATCHES_PATH/$dest/$family/branch_${branch}:[\e[33mu\e[0m][\e[33mb\e[0m]"
+		"$USERPATCHES_PATH/$dest/$family:[\e[33mu\e[0m][\e[32mc\e[0m]"
 		"$SRC/patch/$dest/$family/target_${target}:[\e[32ml\e[0m][\e[34mt\e[0m]"
 		"$SRC/patch/$dest/$family/board_${board}:[\e[32ml\e[0m][\e[35mb\e[0m]"
 		"$SRC/patch/$dest/$family/branch_${branch}:[\e[32ml\e[0m][\e[33mb\e[0m]"

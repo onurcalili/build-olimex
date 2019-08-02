@@ -1,8 +1,8 @@
 diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
-index bd40148a1..bd60e609e 100644
+index cb417bcdd..18f384750 100644
 --- a/arch/arm/boot/dts/Makefile
 +++ b/arch/arm/boot/dts/Makefile
-@@ -1027,6 +1027,7 @@ dtb-$(CONFIG_MACH_SUN7I) += \
+@@ -1053,6 +1053,7 @@ dtb-$(CONFIG_MACH_SUN7I) += \
  	sun7i-a20-olimex-som204-evb.dtb \
  	sun7i-a20-olimex-som204-evb-emmc.dtb \
  	sun7i-a20-olinuxino-lime.dtb \
@@ -11,7 +11,7 @@ index bd40148a1..bd60e609e 100644
  	sun7i-a20-olinuxino-lime2-emmc.dtb \
  	sun7i-a20-olinuxino-micro.dtb \
 diff --git a/arch/arm/boot/dts/sun7i-a20-olimex-som-evb-emmc.dts b/arch/arm/boot/dts/sun7i-a20-olimex-som-evb-emmc.dts
-index 20bf09b22..d2697118e 100644
+index 20bf09b22..199e2a9b0 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olimex-som-evb-emmc.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olimex-som-evb-emmc.dts
 @@ -1,6 +1,6 @@
@@ -22,16 +22,19 @@ index 20bf09b22..d2697118e 100644
   *
   * Copyright (C) 2018 Olimex Ltd.
   *   Author: Stefan Mavrodiev <stefan@olimex.com>
-@@ -14,22 +14,12 @@
+@@ -10,26 +10,14 @@
+ #include "sun7i-a20-olimex-som-evb.dts"
+ 
+ / {
+-
  	model = "Olimex A20-Olimex-SOM-EVB-eMMC";
  	compatible = "olimex,a20-olimex-som-evb-emmc", "allwinner,sun7i-a20";
++};
  
 -	mmc2_pwrseq: mmc2_pwrseq {
 -		compatible = "mmc-pwrseq-emmc";
 -		reset-gpios = <&pio 2 18 GPIO_ACTIVE_LOW>;
 -	};
-+};
-+
 +&mmc2_pwrseq {
 +	reset-gpios = <&pio 2 18 GPIO_ACTIVE_LOW>; /* PC18 */
  };
@@ -50,11 +53,10 @@ index 20bf09b22..d2697118e 100644
 -	};
  };
 diff --git a/arch/arm/boot/dts/sun7i-a20-olimex-som-evb.dts b/arch/arm/boot/dts/sun7i-a20-olimex-som-evb.dts
-index 677ee1c27..78c73ad02 100644
+index f0e6a96e5..56100c7b7 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olimex-som-evb.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olimex-som-evb.dts
-@@ -1,155 +1,34 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+@@ -1,155 +1,33 @@
  /*
 - * Copyright 2015 - Marcus Cooper <codekipper@gmail.com>
 - * Copyright 2015 - Karsten Merker <merker@debian.org>
@@ -64,7 +66,9 @@ index 677ee1c27..78c73ad02 100644
 - * of the GPL or the X11 license, at your option. Note that this dual
 - * licensing only applies to this file, and not this project as a
 - * whole.
-- *
++ * Copyright (C) 2018 Olimex Ltd.
++ *   Author: Stefan Mavrodiev <stefan@olimex.com>
+  *
 - *  a) This file is free software; you can redistribute it and/or
 - *     modify it under the terms of the GNU General Public License as
 - *     published by the Free Software Foundation; either version 2 of the
@@ -97,8 +101,6 @@ index 677ee1c27..78c73ad02 100644
 - *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 - *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 - *     OTHER DEALINGS IN THE SOFTWARE.
-+ * Copyright (C) 2018 Olimex Ltd.
-+ *   Author: Stefan Mavrodiev <stefan@olimex.com>
   */
  
  /dts-v1/;
@@ -132,7 +134,7 @@ index 677ee1c27..78c73ad02 100644
 -			};
 -		};
 -	};
- 
+-
  	leds {
  		compatible = "gpio-leds";
  
@@ -215,7 +217,7 @@ index 677ee1c27..78c73ad02 100644
  	status = "okay";
  
  	button-190 {
-@@ -202,132 +81,12 @@
+@@ -202,126 +80,12 @@
  	};
  };
  
@@ -259,12 +261,6 @@ index 677ee1c27..78c73ad02 100644
 -};
 -
 -#include "axp209.dtsi"
--
--&axp_led {
--	label = "a20-olimex-som-evb:yellow:chgled";
--	status = "okay";
--	x-powers,charger-mode = <0>;
--};
 -
 -&reg_dcdc2 {
 -	regulator-always-on;
@@ -386,10 +382,10 @@ index a59755a2e..357feafe3 100644
 -	};
  };
 diff --git a/arch/arm/boot/dts/sun7i-a20-olimex-som204-evb.dts b/arch/arm/boot/dts/sun7i-a20-olimex-som204-evb.dts
-index 31a3ab5ad..c54759e2e 100644
+index c34a83f66..af8dc84cc 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olimex-som204-evb.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olimex-som204-evb.dts
-@@ -1,178 +1,89 @@
+@@ -1,178 +1,87 @@
  // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
  /*
 - * Device Tree Source for A20-SOM204-EVB Board
@@ -444,7 +440,7 @@ index 31a3ab5ad..c54759e2e 100644
  		stat {
  			label = "a20-som204-evb:green:stat";
 -			gpios = <&pio 8 0 GPIO_ACTIVE_HIGH>;
-+			gpios = <&pio 8 0 GPIO_ACTIVE_HIGH>; /*PI0 */
++			gpios = <&pio 8 0 GPIO_ACTIVE_HIGH>; /* PI0 */
  			default-state = "on";
  		};
  
@@ -527,34 +523,36 @@ index 31a3ab5ad..c54759e2e 100644
 -		remote-endpoint = <&hdmi_con_in>;
 -	};
 -};
-+	phy-handle = <&phy3>;
- 
+-
 -&i2c0 {
 -	status = "okay";
-+	/* A20-SOM204 has different phy address */
-+	/delete-node/ ethernet-phy@1;
- 
+-
 -	axp209: pmic@34 {
 -		reg = <0x34>;
 -		interrupt-parent = <&nmi_intc>;
 -		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
 -	};
 -};
-+	mdio {
-+		compatible = "snps,dwmac-mdio";
-+		#address-cells = <1>;
-+		#size-cells = <0>;
- 
+-
 -/* Exposed to UEXT1 */
 -&i2c1 {
 -	status = "okay";
-+		phy3: ethernet-phy@3 {
-+			compatible = "ethernet-phy-ieee802.3-c22";
- 
+-
 -	eeprom: eeprom@50 {
 -		compatible = "atmel,24c16";
 -		reg = <0x50>;
 -		pagesize = <16>;
++	phy-handle = <&phy3>;
++
++	/* A20-SOM204 has different phy address */
++	/delete-node/ ethernet-phy@1;
++	mdio {
++		compatible = "snps,dwmac-mdio";
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		phy3: ethernet-phy@3 {
++			compatible = "ethernet-phy-ieee802.3-c22";
 +			reset-gpios = <&pio 0 17 GPIO_ACTIVE_LOW>; /* PA17 */
 +			reset-assert-us = <10000>;
 +			reset-deassert-us = <1000000>;
@@ -589,7 +587,7 @@ index 31a3ab5ad..c54759e2e 100644
  	status = "okay";
  
  	rtl8723bs: sdio_wifi@1 {
-@@ -180,18 +91,6 @@
+@@ -180,18 +89,6 @@
  	};
  };
  
@@ -608,7 +606,7 @@ index 31a3ab5ad..c54759e2e 100644
  &pio {
  	uart3_rts_pin: uart3-rts-pin {
  		pins = "PG8";
-@@ -199,132 +98,25 @@
+@@ -199,126 +96,25 @@
  	};
  };
  
@@ -616,12 +614,6 @@ index 31a3ab5ad..c54759e2e 100644
 -
 -&ac_power_supply {
 -	status = "okay";
--};
--
--&axp_led {
--	label = "a20-som204-evb:yellow:chgled";
--	status = "okay";
--	x-powers,charger-mode = <0>;
 -};
 -
 -&battery_power_supply {
@@ -741,8 +733,8 @@ index 31a3ab5ad..c54759e2e 100644
  };
  
 -&usbphy {
--	usb0_id_det-gpio = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
--	usb0_vbus_det-gpio = <&pio 7 5 GPIO_ACTIVE_HIGH>; /* PH5 */
+-	usb0_id_det-gpios = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
+-	usb0_vbus_det-gpios = <&pio 7 5 GPIO_ACTIVE_HIGH>; /* PH5 */
 -	usb0_vbus_power-supply = <&usb_power_supply>;
 -	usb0_vbus-supply = <&reg_usb0_vbus>;
 -	usb1_vbus-supply = <&reg_usb1_vbus>;
@@ -753,10 +745,10 @@ index 31a3ab5ad..c54759e2e 100644
  };
 diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-common.dtsi b/arch/arm/boot/dts/sun7i-a20-olinuxino-common.dtsi
 new file mode 100644
-index 000000000..a362ca44c
+index 000000000..fbadea806
 --- /dev/null
 +++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-common.dtsi
-@@ -0,0 +1,305 @@
+@@ -0,0 +1,310 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Common Device Tree Source binding for Olimex A20 based boards
@@ -797,7 +789,6 @@ index 000000000..a362ca44c
 +		reset-gpios = <&pio 2 16 GPIO_ACTIVE_LOW>; /* PC16 */
 +	};
 +};
-+
 +
 +&ahci {
 +	target-supply = <&reg_ahci_5v>;
@@ -941,6 +932,12 @@ index 000000000..a362ca44c
 +
 +&ac_power_supply {
 +	status = "okay";
++};
++
++&axp_led {
++	label = "olinuxino:yellow:chgled";
++	status = "okay";
++	x-powers,charger-mode = <0>;
 +};
 +
 +&battery_power_supply {
@@ -1088,11 +1085,10 @@ index 000000000..0e80540cc
 +	status = "okay";
 +};
 diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-lime.dts b/arch/arm/boot/dts/sun7i-a20-olinuxino-lime.dts
-index 5e411194b..896de671b 100644
+index e40dd47df..96b716c31 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olinuxino-lime.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-lime.dts
-@@ -1,152 +1,34 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+@@ -1,214 +1,39 @@
  /*
 - * This is based on sun4i-a10-olinuxino-lime.dts
 + * Device Tree Source binding for A20-OLinuXino-LIME
@@ -1247,13 +1243,15 @@ index 5e411194b..896de671b 100644
 -		reg = <0x50>;
 -		pagesize = <16>;
 -	};
- };
- 
- &mmc0 {
-@@ -156,73 +38,10 @@
- 	status = "okay";
- };
- 
+-};
+-
+-&mmc0 {
+-	vmmc-supply = <&reg_vcc3v3>;
+-	bus-width = <4>;
+-	cd-gpios = <&pio 7 1 GPIO_ACTIVE_LOW>; /* PH1 */
+-	status = "okay";
+-};
+-
 -&ohci0 {
 -	status = "okay";
 -};
@@ -1272,20 +1270,8 @@ index 5e411194b..896de671b 100644
 -		function = "gpio_out";
 -		drive-strength = <20>;
 -	};
--
--	usb0_id_detect_pin: usb0-id-detect-pin {
--		pins = "PH4";
--		function = "gpio_in";
--		bias-pull-up;
--	};
--
--	usb0_vbus_detect_pin: usb0-vbus-detect-pin {
--		pins = "PH5";
--		function = "gpio_in";
--		bias-pull-down;
--	};
--};
--
+ };
+ 
  &reg_ahci_5v {
 -	gpio = <&pio 2 3 GPIO_ACTIVE_HIGH>;
 -	status = "okay";
@@ -1316,10 +1302,8 @@ index 5e411194b..896de671b 100644
 -};
 -
 -&usbphy {
--	pinctrl-names = "default";
--	pinctrl-0 = <&usb0_id_detect_pin>, <&usb0_vbus_detect_pin>;
--	usb0_id_det-gpio = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
--	usb0_vbus_det-gpio = <&pio 7 5 GPIO_ACTIVE_HIGH>; /* PH5 */
+-	usb0_id_det-gpios = <&pio 7 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>; /* PH4 */
+-	usb0_vbus_det-gpios = <&pio 7 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; /* PH5 */
 -	usb0_vbus-supply = <&reg_usb0_vbus>;
 -	usb1_vbus-supply = <&reg_usb1_vbus>;
 -	usb2_vbus-supply = <&reg_usb2_vbus>;
@@ -1407,10 +1391,10 @@ index decb014a3..f8005fa96 100644
 -	};
  };
 diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-lime2.dts b/arch/arm/boot/dts/sun7i-a20-olinuxino-lime2.dts
-index 66dd80ced..39d25a95c 100644
+index 95c6f8949..39d25a95c 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olinuxino-lime2.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-lime2.dts
-@@ -1,284 +1,35 @@
+@@ -1,270 +1,35 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
  /*
 - * Copyright 2014 - Iain Paton <ipaton0@gmail.com>
@@ -1593,22 +1577,16 @@ index 66dd80ced..39d25a95c 100644
 -};
 -
 -&pio {
+-	vcc-pa-supply = <&reg_vcc3v3>;
+-	vcc-pc-supply = <&reg_vcc3v3>;
+-	vcc-pe-supply = <&reg_ldo3>;
+-	vcc-pf-supply = <&reg_vcc3v3>;
+-	vcc-pg-supply = <&reg_ldo4>;
+-
 -	led_pins_olinuxinolime: led-pins {
 -		pins = "PH2";
 -		function = "gpio_out";
 -		drive-strength = <20>;
--	};
--
--	usb0_id_detect_pin: usb0-id-detect-pin {
--		pins = "PH4";
--		function = "gpio_in";
--		bias-pull-up;
--	};
--
--	usb0_vbus_detect_pin: usb0-vbus-detect-pin {
--		pins = "PH5";
--		function = "gpio_in";
--		bias-pull-down;
 -	};
  };
  
@@ -1618,12 +1596,6 @@ index 66dd80ced..39d25a95c 100644
 -};
 -
 -#include "axp209.dtsi"
--
--&axp_led {
--	label = "a20-olinuxino-lime2:yellow:chgled";
--	status = "okay";
--	x-powers,charger-mode = <0>;
--};
 -
 -&reg_dcdc2 {
 -	regulator-always-on;
@@ -1693,10 +1665,8 @@ index 66dd80ced..39d25a95c 100644
 -};
 -
 -&usbphy {
--	pinctrl-names = "default";
--	pinctrl-0 = <&usb0_id_detect_pin>, <&usb0_vbus_detect_pin>;
--	usb0_id_det-gpio = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
--	usb0_vbus_det-gpio = <&pio 7 5 GPIO_ACTIVE_HIGH>; /* PH5 */
+-	usb0_id_det-gpios = <&pio 7 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>; /* PH4 */
+-	usb0_vbus_det-gpios = <&pio 7 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; /* PH5 */
 -	usb0_vbus-supply = <&reg_usb0_vbus>;
 -	usb1_vbus-supply = <&reg_usb1_vbus>;
 -	usb2_vbus-supply = <&reg_usb2_vbus>;
@@ -1704,15 +1674,14 @@ index 66dd80ced..39d25a95c 100644
 +	gpio = <&pio 2 17 GPIO_ACTIVE_HIGH>; /* PC17 */
  };
 diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro-emmc.dts b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro-emmc.dts
-index 2337b44a8..42f30349b 100644
+index 2337b44a8..093f321dc 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro-emmc.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro-emmc.dts
-@@ -1,68 +1,20 @@
-- /*
+@@ -1,68 +1,19 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+  /*
 - * Copyright 2017 Olimex Ltd.
 - * Stefan Mavrodiev <stefan@olimex.com>
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
 + * Device Tree Source binding for A20-OLinuXino-MICRO-eMMC
   *
 - * This file is dual-licensed: you can use it either under the terms
@@ -1753,7 +1722,7 @@ index 2337b44a8..42f30349b 100644
 - *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 - *     OTHER DEALINGS IN THE SOFTWARE.
 + * Copyright (C) 2018 Olimex Ltd.
-+ *   Author: Stefan Mavrodiev <stefan@olimex.com>
++ *   Author: Stefan Mavrodiev <stefan@olimex.com>.
   */
  
 +/dts-v1/;
@@ -1775,7 +1744,7 @@ index 2337b44a8..42f30349b 100644
 -	non-removable;
 -	mmc-pwrseq = <&mmc2_pwrseq>;
  	status = "okay";
- 
+-
 -	emmc: emmc@0 {
 -		reg = <0>;
 -		compatible = "mmc-card";
@@ -1783,7 +1752,7 @@ index 2337b44a8..42f30349b 100644
 -	};
  };
 diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-index 700de909e..977bf6c5c 100644
+index 0dcba0704..977bf6c5c 100644
 --- a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
 @@ -1,168 +1,38 @@
@@ -1961,7 +1930,7 @@ index 700de909e..977bf6c5c 100644
  	status = "okay";
  
  	button-191 {
-@@ -215,158 +85,22 @@
+@@ -215,138 +85,22 @@
  	};
  };
  
@@ -2002,30 +1971,12 @@ index 700de909e..977bf6c5c 100644
 -		function = "gpio_out";
 -		drive-strength = <20>;
 -	};
--
--	usb0_id_detect_pin: usb0-id-detect-pin {
--		pins = "PH4";
--		function = "gpio_in";
--		bias-pull-up;
--	};
--
--	usb0_vbus_detect_pin: usb0-vbus-detect-pin {
--		pins = "PH5";
--		function = "gpio_in";
--		bias-pull-down;
--	};
 -};
 -
 -#include "axp209.dtsi"
 -
 -&ac_power_supply {
 -	status = "okay";
--};
--
--&axp_led {
--	label = "a20-olinuxino-micro:yellow:chgled";
--	status = "okay";
--	x-powers,charger-mode = <0>;
 -};
 -
 -&battery_power_supply {
@@ -2112,10 +2063,8 @@ index 700de909e..977bf6c5c 100644
 -};
 -
 -&usbphy {
--	pinctrl-names = "default";
--	pinctrl-0 = <&usb0_id_detect_pin>, <&usb0_vbus_detect_pin>;
--	usb0_id_det-gpio = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
--	usb0_vbus_det-gpio = <&pio 7 5 GPIO_ACTIVE_HIGH>; /* PH5 */
+-	usb0_id_det-gpios = <&pio 7 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>; /* PH4 */
+-	usb0_vbus_det-gpios = <&pio 7 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; /* PH5 */
 -	usb0_vbus-supply = <&reg_usb0_vbus>;
 -	usb1_vbus-supply = <&reg_usb1_vbus>;
 -	usb2_vbus-supply = <&reg_usb2_vbus>;
