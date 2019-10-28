@@ -1,13 +1,40 @@
 diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
-index 97964f7f2ace..a392e4db60ae 100644
+index ee6900eb3..62bccacae 100644
 --- a/drivers/gpu/drm/panel/panel-simple.c
 +++ b/drivers/gpu/drm/panel/panel-simple.c
-@@ -1790,21 +1790,21 @@ static const struct panel_desc okaya_rs800480t_7x0gp = {
+@@ -2100,21 +2100,48 @@ static const struct panel_desc okaya_rs800480t_7x0gp = {
  	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
  };
-
+ 
 -static const struct drm_display_mode olimex_lcd_olinuxino_43ts_mode = {
 -	.clock = 9000,
++static const struct drm_display_mode olimex_vga_olinuxino_800_mode = {
++	.clock = 40000,
++	.hdisplay = 800,
++	.hsync_start = 800 + 40,
++	.hsync_end = 800 + 40 + 128,
++	.htotal = 800 + 40 + 128 + 88,
++	.vdisplay = 600,
++	.vsync_start = 600 + 5,
++	.vsync_end = 600 + 5 + 4,
++	.vtotal = 600 + 5 + 4 + 19,
++	.vrefresh = 60,
++};
++
++static const struct drm_display_mode olimex_vga_olinuxino_1024_mode = {
++	.clock = 45000,
++	.hdisplay = 1024,
++	.hsync_start = 1024 + 16,
++	.hsync_end = 1024 + 16 + 10,
++	.htotal = 1024 + 16 + 10 + 150,
++	.vdisplay = 600,
++	.vsync_start = 600 + 2,
++	.vsync_end = 600 + 2 + 21,
++	.vtotal = 600 + 2 + 21 + 2,
++	.vrefresh = 60,
++};
++
++
 +static const struct drm_display_mode olimex_lcd_olinuxino_43_mode = {
 +	.clock = 12000,
  	.hdisplay = 480,
@@ -26,7 +53,7 @@ index 97964f7f2ace..a392e4db60ae 100644
 +	.vtotal = 272 + 4 + 10 + 13,
  	.vrefresh = 60,
  };
-
+ 
 -static const struct panel_desc olimex_lcd_olinuxino_43ts = {
 -	.modes = &olimex_lcd_olinuxino_43ts_mode,
 +static const struct panel_desc olimex_lcd_olinuxino_43 = {
@@ -34,10 +61,10 @@ index 97964f7f2ace..a392e4db60ae 100644
  	.num_modes = 1,
  	.size = {
  		.width = 95,
-@@ -1813,6 +1813,74 @@ static const struct panel_desc olimex_lcd_olinuxino_43ts = {
+@@ -2123,6 +2150,74 @@ static const struct panel_desc olimex_lcd_olinuxino_43ts = {
  	.bus_format = MEDIA_BUS_FMT_RGB888_1X24,
  };
-
+ 
 +static const struct drm_display_mode olimex_lcd_olinuxino_5_mode = {
 +	.clock = 33300,
 +	.hdisplay = 800,
@@ -109,12 +136,18 @@ index 97964f7f2ace..a392e4db60ae 100644
  /*
   * 800x480 CVT. The panel appears to be quite accepting, at least as far as
   * pixel clocks, but this is the timing that was being used in the Adafruit
-@@ -2496,8 +2564,17 @@ static const struct of_device_id platform_of_match[] = {
+@@ -2972,9 +3067,25 @@ static const struct of_device_id platform_of_match[] = {
+ 	}, {
  		.compatible = "okaya,rs800480t-7x0gp",
  		.data = &okaya_rs800480t_7x0gp,
- 	}, {
--		.compatible = "olimex,lcd-olinuxino-43-ts",
--		.data = &olimex_lcd_olinuxino_43ts,
++	},{
++		.compatible = "olimex,olinuxino-vga-800x600",
++ 		.data = &olimex_vga_olinuxino_800_mode,	
++	},{	
++		.compatible = "olimex,olinuxino-vga-1024x768",
++                .data = &olimex_vga_olinuxino_1024_mode,
++
++	},{
 +		.compatible = "olimex,lcd-olinuxino-4.3",
 +		.data = &olimex_lcd_olinuxino_43,
 +	}, {
@@ -123,7 +156,9 @@ index 97964f7f2ace..a392e4db60ae 100644
 +	}, {
 +		.compatible = "olimex,lcd-olinuxino-7",
 +		.data = &olimex_lcd_olinuxino_7,
-+	}, {
+ 	}, {
+-		.compatible = "olimex,lcd-olinuxino-43-ts",
+-		.data = &olimex_lcd_olinuxino_43ts,
 +		.compatible = "olimex,lcd-olinuxino-10",
 +		.data = &olimex_lcd_olinuxino_10,
  	}, {
