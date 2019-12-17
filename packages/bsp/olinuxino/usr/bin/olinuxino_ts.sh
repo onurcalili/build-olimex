@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check is LCD is enabled in the device tree
-LCD=$(grep -r "lcd-olinuxino-[147]" /proc/device-tree -a -h)
+LCD=$(grep -r "lcd-olinuxino-[147]" /proc/device-tree -a -h | tr -d '\0')
 [[ -z $LCD ]] && exit 0
 
 # Select transformation matrix
