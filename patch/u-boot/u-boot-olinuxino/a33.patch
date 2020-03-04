@@ -24,56 +24,32 @@ index b23dda00c9..cb89cb9bad 100644
  #include <spl.h>
  #include <cli.h>
 diff --git a/board/olimex/a33_olinuxino/fdt.c b/board/olimex/a33_olinuxino/fdt.c
-index 8a23c41c65..0593212ea9 100644
+index 8a23c41c65..bad05ac4e5 100644
 --- a/board/olimex/a33_olinuxino/fdt.c
 +++ b/board/olimex/a33_olinuxino/fdt.c
-@@ -53,7 +53,12 @@ static int get_path_offset(void *blob, enum devices dev, char *dpath)
+@@ -58,6 +58,12 @@ static int get_path_offset(void *blob, enum devices dev, char *dpath)
  	if (offset >= 0)
  		goto success;
  
--	sprintf(path, "/soc@01c00000/%s@%08x", paths[dev].name, paths[dev].addr);
-+	sprintf(path, "/soc@1c00000/%s@%08x", paths[dev].name, paths[dev].addr);
++	sprintf(path, "/soc/%s@%x", paths[dev].name, paths[dev].addr);
 +	offset = fdt_path_offset(blob, path);
 +	if (offset >= 0)
 +		goto success;
 +
-+	sprintf(path, "/soc/%s@%x", paths[dev].name, paths[dev].addr);
- 	offset = fdt_path_offset(blob, path);
- 	if (offset >= 0)
- 		goto success;
-@@ -104,9 +109,9 @@ static int board_fix_lcd_olinuxino(void *blob)
++
+ 	printf("Path \"%s\" not found: %s (%d)\n", path, fdt_strerror(offset), offset);
+ 	return offset;
  
- 	pinctrl_phandle = fdt_get_phandle(blob, offset);
+@@ -106,7 +112,7 @@ static int board_fix_lcd_olinuxino(void *blob)
  	if (pinctrl_phandle < 0)
- 		return offset;
+  		return offset;
  
 -	offset = fdt_subnode_offset(blob, offset, "pwm0");
 +	offset = fdt_subnode_offset(blob, offset, "pwm0-pin");
  	if (offset < 0)
  		return offset;
  
-@@ -115,12 +120,13 @@ static int board_fix_lcd_olinuxino(void *blob)
- 		return -1;
- 
- 	offset = fdt_node_offset_by_compatible(blob, -1, FDT_COMP_PWM0);
-	if (offset < 0)
-		return offset;
- 
- 	ret |= fdt_set_node_status(blob, offset, FDT_STATUS_OKAY, 0);
- 	ret |= fdt_setprop_u32(blob, offset, "pinctrl-0", pins_phandle);
- 	ret |= fdt_setprop_string(blob, offset, "pinctrl-names", "default");
- 	if (ret < 0)
- 		return ret;
- 
-@@ -128,7 +134,6 @@ static int board_fix_lcd_olinuxino(void *blob)
- 	if (!pwm_phandle)
- 		return -1;
-
--
- 	/**
- 	 * reg_vcc5v0: vcc5v0 {
- 	 *	compatible = "regulator-fixed";
-@@ -249,7 +254,7 @@ static int board_fix_lcd_olinuxino(void *blob)
+@@ -249,7 +255,7 @@ static int board_fix_lcd_olinuxino(void *blob)
  	if (offset < 0)
  		return offset;
  
