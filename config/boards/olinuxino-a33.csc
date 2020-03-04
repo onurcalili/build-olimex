@@ -1,6 +1,7 @@
 # A33 quad core 1Gb SoC
 BOARD_NAME="OLinuXino-A33"
 BOARDFAMILY="sun8i"
+LINUXFAMILY="sun8i"
 OVERLAY_PREFIX="sun8i-a33"
 
 MODULES="hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i 8021q a20_tp"

@@ -1,0 +1,131 @@
+diff --git a/arch/arm/dts/sun8i-a33-olinuxino.dts b/arch/arm/dts/sun8i-a33-olinuxino.dts
+index b8bb476342..4e86c8a65a 100644
+--- a/arch/arm/dts/sun8i-a33-olinuxino.dts
++++ b/arch/arm/dts/sun8i-a33-olinuxino.dts
+@@ -91,8 +91,6 @@
+ };
+ 
+ &nfc {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&nand_pins_a &nand_cs0_pins_a &nand_rb0_pins_a>;
+ 	status = "okay";
+ 
+ 	nand@0 {
+diff --git a/board/olimex/a33_olinuxino/board.c b/board/olimex/a33_olinuxino/board.c
+index b23dda00c9..cb89cb9bad 100644
+--- a/board/olimex/a33_olinuxino/board.c
++++ b/board/olimex/a33_olinuxino/board.c
+@@ -13,7 +13,6 @@
+ #include <generic-phy.h>
+ #include <phy-sun4i-usb.h>
+ #include <nand.h>
+-#include <crc.h>
+ #include <mmc.h>
+ #include <spl.h>
+ #include <cli.h>
+diff --git a/board/olimex/a33_olinuxino/fdt.c b/board/olimex/a33_olinuxino/fdt.c
+index 8a23c41c65..bad05ac4e5 100644
+--- a/board/olimex/a33_olinuxino/fdt.c
++++ b/board/olimex/a33_olinuxino/fdt.c
+@@ -58,6 +58,12 @@ static int get_path_offset(void *blob, enum devices dev, char *dpath)
+ 	if (offset >= 0)
+ 		goto success;
+ 
++	sprintf(path, "/soc/%s@%x", paths[dev].name, paths[dev].addr);
++	offset = fdt_path_offset(blob, path);
++	if (offset >= 0)
++		goto success;
++
++
+ 	printf("Path \"%s\" not found: %s (%d)\n", path, fdt_strerror(offset), offset);
+ 	return offset;
+ 
+@@ -106,7 +112,7 @@ static int board_fix_lcd_olinuxino(void *blob)
+ 	if (pinctrl_phandle < 0)
+  		return offset;
+ 
+-	offset = fdt_subnode_offset(blob, offset, "pwm0");
++	offset = fdt_subnode_offset(blob, offset, "pwm0-pin");
+ 	if (offset < 0)
+ 		return offset;
+ 
+@@ -249,7 +255,7 @@ static int board_fix_lcd_olinuxino(void *blob)
+ 	if (offset < 0)
+ 		return offset;
+ 
+-	offset = fdt_subnode_offset(blob, offset, "lcd-rgb666@0");
++	offset = fdt_subnode_offset(blob, offset, "lcd-rgb666-pins");
+ 	if (offset < 0)
+ 		return offset;
+ 
+diff --git a/configs/A33-OLinuXino_defconfig b/configs/A33-OLinuXino_defconfig
+index a1345988a5..abb797e05c 100644
+--- a/configs/A33-OLinuXino_defconfig
++++ b/configs/A33-OLinuXino_defconfig
+@@ -38,6 +38,7 @@ CONFIG_SYS_NAND_BLOCK_SIZE=0x200000
+ CONFIG_SYS_NAND_PAGE_SIZE=0x2000
+ CONFIG_SYS_NAND_OOBSIZE=0x280
+ 
++CONFIG_MTD_PARTITIONS=y
+ CONFIG_CMD_MTDPARTS=y
+ CONFIG_MTDIDS_DEFAULT="nand0=nand.0"
+ CONFIG_MTDPARTS_DEFAULT="mtdparts=nand.0:4m(NAND.SPL),4m(NAND.SPL.backup),4m(NAND.u-boot),4m(NAND.u-boot.backup),4m(NAND.u-boot-env),4m(NAND.u-boot-env.backup),4m(NAND.dtb),16m(NAND.kernel),-(NAND.rootfs)"
+diff --git a/include/configs/a33_olinuxino.h b/include/configs/a33_olinuxino.h
+index 750a8edab4..47527e420f 100644
+--- a/include/configs/a33_olinuxino.h
++++ b/include/configs/a33_olinuxino.h
+@@ -131,6 +131,7 @@
+ 
+ #define CONFIG_SYS_SPD_BUS_NUM		0 /* The axp209 i2c bus is bus 0 */
+ #define CONFIG_VIDEO_LCD_I2C_BUS	-1 /* NA, but necessary to compile */
++#define LCD_OLINUXINO
+ #define LCD_OLINUXINO_EEPROM_BUS	I2C_0
+ 
+ #ifdef CONFIG_REQUIRE_SERIAL_CONSOLE
+@@ -159,15 +160,12 @@
+ 
+ #ifdef CONFIG_USB_EHCI_HCD
+ #define CONFIG_USB_OHCI_NEW
+-#define CONFIG_USB_OHCI_SUNXI
+ #define CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS 1
+ #endif
+ 
+ #ifdef CONFIG_NAND_SUNXI
+ #define CONFIG_SYS_NAND_ONFI_DETECTION
+ #define CONFIG_SYS_MAX_NAND_DEVICE 1
+-#define CONFIG_MTD_PARTITIONS
+-#define CONFIG_MTD_DEVICE
+ 
+ #define NAND_MTDIDS "nand0=nand.0"
+ #define NAND_MTDPARTS "mtdparts=nand.0:4m(NAND.SPL),4m(NAND.SPL.backup),4m(NAND.u-boot),4m(NAND.u-boot.backup),4m(NAND.u-boot-env),4m(NAND.u-boot-env.backup),4m(NAND.dtb),16m(NAND.kernel),-(NAND.rootfs)"
+@@ -189,8 +187,6 @@
+ #define CONFIG_PREBOOT
+ #endif
+ 
+-#define CONFIG_MISC_INIT_R
+-
+ #ifndef CONFIG_SPL_BUILD
+ 
+ /*
+diff --git a/include/configs/sunxi-common.h b/include/configs/sunxi-common.h
+index b01d1c3c84..9ecf795c5a 100644
+--- a/include/configs/sunxi-common.h
++++ b/include/configs/sunxi-common.h
+@@ -62,7 +62,7 @@
+ #define SDRAM_OFFSET(x) 0x2##x
+ #define CONFIG_SYS_SDRAM_BASE		0x20000000
+ #define CONFIG_SYS_LOAD_ADDR		0x22000000 /* default load address */
+-/* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here 
++/* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here
+  * since it needs to fit in with the other values. By also #defining it
+  * we get warnings if the Kconfig value mismatches. */
+ #define CONFIG_SPL_STACK_R_ADDR		0x2fe00000
+@@ -72,7 +72,7 @@
+ #define CONFIG_SYS_SDRAM_BASE		0x40000000
+ #define CONFIG_SYS_LOAD_ADDR		0x42000000 /* default load address */
+ /* V3s do not have enough memory to place code at 0x4a000000 */
+-/* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here 
++/* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here
+  * since it needs to fit in with the other values. By also #defining it
+  * we get warnings if the Kconfig value mismatches. */
+ #define CONFIG_SPL_STACK_R_ADDR		0x4fe00000
