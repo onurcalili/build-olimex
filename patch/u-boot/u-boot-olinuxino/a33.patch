@@ -45,8 +45,7 @@ index 8a23c41c65..0593212ea9 100644
  
  	pinctrl_phandle = fdt_get_phandle(blob, offset);
  	if (pinctrl_phandle < 0)
-- 		return offset;
-+		return offset;
+ 		return offset;
  
 -	offset = fdt_subnode_offset(blob, offset, "pwm0");
 +	offset = fdt_subnode_offset(blob, offset, "pwm0-pin");
