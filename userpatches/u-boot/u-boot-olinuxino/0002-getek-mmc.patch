@@ -1,0 +1,13 @@
+diff --git a/drivers/mmc/sunxi_mmc.c b/drivers/mmc/sunxi_mmc.c
+index 8e43538..3eecf5a 100644
+--- a/drivers/mmc/sunxi_mmc.c
++++ b/drivers/mmc/sunxi_mmc.c
+@@ -52,7 +52,7 @@ struct sunxi_mmc_priv mmc_host[4];
+ static int sunxi_mmc_getcd_gpio(int sdc_no)
+ {
+ 	switch (sdc_no) {
+-#if defined(CONFIG_TARGET_A20_OLINUXINO)
++#if defined(CONFIG_TARGET_A20_OLINUXINO) || defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 	case 0: return sunxi_name_to_gpio("PH1");
+ 	case 1:
+ 	case 2:

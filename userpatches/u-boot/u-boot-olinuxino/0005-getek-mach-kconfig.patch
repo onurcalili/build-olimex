@@ -1,0 +1,15 @@
+diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
+index 621bdfa..59ecc9d 100644
+--- a/arch/arm/mach-sunxi/Kconfig
++++ b/arch/arm/mach-sunxi/Kconfig
+@@ -606,6 +606,10 @@ if TARGET_A20_OLINUXINO
+ 	source "board/olimex/a20_olinuxino/Kconfig"
+ endif
+ 
++if TARGET_GETEK_SOM204_A20
++	source "board/getek/getek_som204_a20/Kconfig"
++endif
++
+ if TARGET_A33_OLINUXINO
+ 	source "board/olimex/a33_olinuxino/Kconfig"
+ endif

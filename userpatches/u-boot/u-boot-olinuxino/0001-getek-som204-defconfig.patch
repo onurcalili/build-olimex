@@ -1,6 +1,6 @@
 diff --git a/configs/GETEK-SOM204-A20_defconfig b/configs/GETEK-SOM204-A20_defconfig
 new file mode 100644
-index 0000000..0fc3db2
+index 0000000..a5d7a96
 --- /dev/null
 +++ b/configs/GETEK-SOM204-A20_defconfig
 @@ -0,0 +1,101 @@
@@ -9,7 +9,7 @@ index 0000000..0fc3db2
 +CONFIG_SPL=y
 +CONFIG_MACH_SUN7I=y
 +CONFIG_DRAM_CLK=384
-+CONFIG_DEFAULT_DEVICE_TREE="sun7i-a20-olinuxino"
++CONFIG_DEFAULT_DEVICE_TREE="sun7i-a20-getek"
 +CONFIG_AHCI=y
 +# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
 +CONFIG_SPL_I2C_SUPPORT=y
@@ -20,7 +20,7 @@ index 0000000..0fc3db2
 +# CONFIG_SPL_PARTITION_UUIDS is not set
 +CONFIG_SPL_BOARD_INIT=y
 +# SPL_NAND_SUPPORT is not set
-+CONFIG_BOOTDELAY=1
++CONFIG_BOOTDELAY=0
 +CONFIG_NR_DRAM_BANKS=1
 +
 +CONFIG_CMD_SF=y
@@ -87,19 +87,19 @@ index 0000000..0fc3db2
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_MUSB_GADGET=y
 +CONFIG_SYS_USB_EVENT_POLL_VIA_INT_QUEUE=y
-+CONFIG_TARGET_A20_OLINUXINO=y
++CONFIG_TARGET_GETEK_SOM204_A20=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
 +CONFIG_FIT=y
 +CONFIG_OF_BOARD_FIXUP=y
 +CONFIG_FDT_FIXUP_PARTITIONS=y
 +CONFIG_OF_SYSTEM_SETUP=y
-+CONFIG_OF_LIST="sun7i-a20-olinuxino-micro sun7i-a20-olinuxino-micro-emmc sun7i-a20-olinuxino-lime sun7i-a20-olinuxino-lime-emmc sun7i-a20-olinuxino-lime2 sun7i-a20-olinuxino-lime2-emmc sun7i-a20-olimex-som-evb sun7i-a20-olimex-som-evb-emmc sun7i-a20-olimex-som204-evb sun7i-a20-olimex-som204-evb-emmc"
++CONFIG_OF_LIST="sun7i-a20-som204-getek"
 +CONFIG_MULTI_DTB_FIT=y
 +
 +CONFIG_BOARD_EARLY_INIT_R=y
 +CONFIG_MISC_INIT_R=y
 +
-+CONFIG_USB_GADGET_MANUFACTURER="Olimex Ltd."
++CONFIG_USB_GADGET_MANUFACTURER="GETEK"
 +CONFIG_USB_GADGET_VENDOR_NUM=0x15ba
 +CONFIG_USB_GADGET_PRODUCT_NUM=0x0041
 +# CONFIG_USB_ETHER is not set
