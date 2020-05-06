@@ -820,10 +820,10 @@ index 0000000..24918ff
 +	);
 diff --git a/board/getek/common/lcd_getek.c b/board/getek/common/lcd_getek.c
 new file mode 100644
-index 0000000..27c89e6
+index 0000000..f64f64f
 --- /dev/null
 +++ b/board/getek/common/lcd_getek.c
-@@ -0,0 +1,161 @@
+@@ -0,0 +1,160 @@
 +#include <common.h>
 +#include <dm.h>
 +#include <i2c.h>
@@ -853,7 +853,6 @@ index 0000000..27c89e6
 +		}
 +
 +	},
-+#endif
 +	{
 +		.id = 0,
 +	},

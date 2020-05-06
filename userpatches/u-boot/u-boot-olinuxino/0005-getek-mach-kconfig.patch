@@ -1,5 +1,5 @@
 diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
-index 621bdfa..c2d6d76 100644
+index 621bdfa..e4a7909 100644
 --- a/arch/arm/mach-sunxi/Kconfig
 +++ b/arch/arm/mach-sunxi/Kconfig
 @@ -335,6 +335,12 @@ config TARGET_A20_OLINUXINO
@@ -44,16 +44,18 @@ index 621bdfa..c2d6d76 100644
  config USB0_VBUS_PIN
  	string "Vbus enable pin for usb0 (otg)"
  	default ""
-@@ -774,7 +784,7 @@ config I2C1_ENABLE
+@@ -1005,6 +1015,10 @@ config VIDEO_LCD_PANEL_OLINUXINO
+ 	bool "Olimex LCD-OLinuXino LCD panel"
+ 	select VIDEO_LCD_IF_PARALLEL
  
- config I2C2_ENABLE
- 	bool "Enable I2C/TWI controller 2"
--	default y if VIDEO_LCD_PANEL_OLINUXINO && TARGET_A20_OLINUXINO
-+	default y if VIDEO_LCD_PANEL_OLINUXINO && TARGET_A20_OLINUXINO && TARGET_GETEK_SOM204_A20
- 	default n
- 	select CMD_I2C
- 	---help---
-@@ -1038,7 +1048,7 @@ config VIDEO_LCD_TL059WV5C0
++config VIDEO_LCD_PANEL_GETEK
++	bool "Getek LCD-GETEK LCD panel"
++	select VIDEO_LCD_IF_PARALLEL
++
+ config VIDEO_LCD_PANEL_MIPI_4_LANE_513_MBPS_VIA_SSD2828
+ 	bool "MIPI 4-lane, 513Mbps LCD panel via SSD2828 bridge chip"
+ 	select VIDEO_LCD_SSD2828
+@@ -1038,7 +1052,7 @@ config VIDEO_LCD_TL059WV5C0
  
  endchoice
  
