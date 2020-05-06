@@ -1,0 +1,74 @@
+diff --git a/drivers/phy/allwinner/phy-sun4i-usb.c b/drivers/phy/allwinner/phy-sun4i-usb.c
+index 3cd2cc4..16929db 100644
+--- a/drivers/phy/allwinner/phy-sun4i-usb.c
++++ b/drivers/phy/allwinner/phy-sun4i-usb.c
+@@ -97,7 +97,8 @@ struct sun4i_usb_phy_info {
+ 	{
+ #if !defined(CONFIG_TARGET_A20_OLINUXINO) && \
+     !defined(CONFIG_TARGET_A33_OLINUXINO) && \
+-    !defined(CONFIG_TARGET_A64_OLINUXINO)
++    !defined(CONFIG_TARGET_A64_OLINUXINO) && \
++    !defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		.gpio_vbus = CONFIG_USB0_VBUS_PIN,
+ 		.gpio_vbus_det = CONFIG_USB0_VBUS_DET,
+ 		.gpio_id_det = CONFIG_USB0_ID_DET,
+@@ -106,7 +107,8 @@ struct sun4i_usb_phy_info {
+ 	{
+ #if !defined(CONFIG_TARGET_A20_OLINUXINO) && \
+     !defined(CONFIG_TARGET_A33_OLINUXINO) && \
+-    !defined(CONFIG_TARGET_A64_OLINUXINO)
++    !defined(CONFIG_TARGET_A64_OLINUXINO) && \
++    !defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		.gpio_vbus = CONFIG_USB1_VBUS_PIN,
+ #endif
+ 		.gpio_vbus_det = NULL,
+@@ -115,7 +117,8 @@ struct sun4i_usb_phy_info {
+ 	{
+ #if !defined(CONFIG_TARGET_A20_OLINUXINO) && \
+     !defined(CONFIG_TARGET_A33_OLINUXINO) && \
+-    !defined(CONFIG_TARGET_A64_OLINUXINO)
++    !defined(CONFIG_TARGET_A64_OLINUXINO) && \
++    !defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		.gpio_vbus = CONFIG_USB2_VBUS_PIN,
+ #endif
+ 		.gpio_vbus_det = NULL,
+@@ -124,7 +127,8 @@ struct sun4i_usb_phy_info {
+ 	{
+ #if !defined(CONFIG_TARGET_A20_OLINUXINO) && \
+     !defined(CONFIG_TARGET_A33_OLINUXINO) && \
+-    !defined(CONFIG_TARGET_A64_OLINUXINO)
++    !defined(CONFIG_TARGET_A64_OLINUXINO) && \
++    !defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		.gpio_vbus = CONFIG_USB3_VBUS_PIN,
+ #endif
+ 		.gpio_vbus_det = NULL,
+@@ -449,7 +453,8 @@ static int sun4i_usb_phy_probe(struct udevice *dev)
+ 
+ #if defined(CONFIG_TARGET_A20_OLINUXINO) || \
+     defined(CONFIG_TARGET_A33_OLINUXINO) || \
+-    defined(CONFIG_TARGET_A64_OLINUXINO)
++    defined(CONFIG_TARGET_A64_OLINUXINO) || \
++    defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		phy->gpio_vbus = sunxi_name_to_gpio(olimex_get_usb_vbus_pin(i));
+ #else
+ 		phy->gpio_vbus = sunxi_name_to_gpio(info->gpio_vbus);
+@@ -465,7 +470,8 @@ static int sun4i_usb_phy_probe(struct udevice *dev)
+ 
+ #if defined(CONFIG_TARGET_A20_OLINUXINO) || \
+     defined(CONFIG_TARGET_A33_OLINUXINO) || \
+-    defined(CONFIG_TARGET_A64_OLINUXINO)
++    defined(CONFIG_TARGET_A64_OLINUXINO) || \
++    defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		phy->gpio_vbus_det = (i == 0) ?
+ 			sunxi_name_to_gpio(olimex_get_usb_vbus_det_pin()) : -1;
+ #else
+@@ -481,7 +487,8 @@ static int sun4i_usb_phy_probe(struct udevice *dev)
+ 		}
+ #if defined(CONFIG_TARGET_A20_OLINUXINO) || \
+     defined(CONFIG_TARGET_A33_OLINUXINO) || \
+-    defined(CONFIG_TARGET_A64_OLINUXINO)
++    defined(CONFIG_TARGET_A64_OLINUXINO) || \
++    defined(CONFIG_TARGET_GETEK_SOM204_A20)
+ 		phy->gpio_id_det = (i == 0) ?
+ 			sunxi_name_to_gpio(olimex_get_usb_id_pin()) : -1;
+ #else

@@ -1,17 +1,11 @@
 diff --git a/include/configs/getek_som204_a20.h b/include/configs/getek_som204_a20.h
 new file mode 100644
-index 0000000..f2fd84e
+index 0000000..ba03042
 --- /dev/null
 +++ b/include/configs/getek_som204_a20.h
-@@ -0,0 +1,403 @@
-+/*
-+ * Copyright (C) 2018 Olimex Ltd.
-+ *   Author: Stefan Mavrodiev <stefan@olimex.com>
-+ *
-+ * SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+ */
-+#ifndef __A20_OLINUXINO_CONFIG_H
-+#define __A20_OLINUXINO_CONFIG_H
+@@ -0,0 +1,396 @@
++#ifndef __GETEK_SOM204_A20_CONFIG_H
++#define __GETEK_SOM204_A20_CONFIG_H
 +
 +#include <asm/arch/cpu.h>
 +#include <linux/stringify.h>
@@ -170,8 +164,7 @@ index 0000000..f2fd84e
 +
 +#define CONFIG_SYS_SPD_BUS_NUM		0 /* The axp209 i2c bus is bus 0 */
 +#define CONFIG_VIDEO_LCD_I2C_BUS	-1 /* NA, but necessary to compile */
-+#define LCD_OLINUXINO
-+#define LCD_OLINUXINO_EEPROM_BUS	I2C_2
++#define LCD_GETEK
 +
 +#ifdef CONFIG_REQUIRE_SERIAL_CONSOLE
 +#define OF_STDOUT_PATH		"/soc@01c00000/serial@01c28000:115200"
@@ -406,4 +399,4 @@ index 0000000..f2fd84e
 +
 +#define CONFIG_MACH_TYPE	(4283 | ((CONFIG_MACH_TYPE_COMPAT_REV) << 28))
 +
-+#endif /* __A20_OLINUXINO_CONFIG_H */
++#endif /* __GETEK_SOM204_A20_CONFIG_H */

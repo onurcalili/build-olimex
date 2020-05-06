@@ -1,0 +1,526 @@
+diff --git a/drivers/video/Makefile b/drivers/video/Makefile
+index ea3cb2f..faa5517 100644
+--- a/drivers/video/Makefile
++++ b/drivers/video/Makefile
+@@ -51,6 +51,7 @@ obj-$(CONFIG_VIDEO_IVYBRIDGE_IGD) += ivybridge_igd.o
+ obj-$(CONFIG_VIDEO_LCD_ANX9804) += anx9804.o
+ obj-$(CONFIG_VIDEO_LCD_HITACHI_TX18D42VM) += hitachi_tx18d42vm_lcd.o
+ obj-$(CONFIG_VIDEO_LCD_OLINUXINO_PANEL) +=  olinuxino_panel.o
++obj-$(CONFIG_VIDEO_LCD_GETEK_PANEL) +=  getek_panel.o
+ obj-$(CONFIG_VIDEO_LCD_SSD2828) += ssd2828.o
+ obj-$(CONFIG_VIDEO_MB862xx) += mb862xx.o videomodes.o
+ obj-${CONFIG_VIDEO_MESON} += meson/
+diff --git a/drivers/video/getek_panel.c b/drivers/video/getek_panel.c
+new file mode 100644
+index 0000000..34c004d
+--- /dev/null
++++ b/drivers/video/getek_panel.c
+@@ -0,0 +1,223 @@
++#include <common.h>
++#include <backlight.h>
++#include <dm.h>
++#include <i2c.h>
++#include <panel.h>
++#include <asm/gpio.h>
++#include <power/regulator.h>
++
++#define LCD_GETEK_SATOZ_SAT043AT40D09RH	1
++
++struct lcd_getek_mode {
++	u32 pixelclock;
++	u32 hactive;
++	u32 hfp;
++	u32 hbp;
++	u32 hpw;
++	u32 vactive;
++	u32 vfp;
++	u32 vbp;
++	u32 vpw;
++	u32 refresh;
++	u32 flags;
++};
++
++struct lcd_getek_info {
++	char name[32];
++	u32 width_mm;
++	u32 height_mm;
++	u32 bpc;
++	u32 bus_format;
++	u32 bus_flag;
++} __attribute__((__packed__));
++
++#define GETEK_PANEL(_id, _name, _pclk, \
++	_hactive, _hfp, _hbp, _hpw, \
++	_vactive, _vfp, _vbp, _vpw, _flags) \
++	{ \
++		.id = _id, \
++		.name = _name, \
++		{ \
++			.pixelclock = _pclk, \
++			.hactive = _hactive, \
++			.hfp = _hfp, \
++			.hbp = _hbp, \
++			.hpw = _hpw, \
++			.vactive = _vactive, \
++			.vfp = _vfp, \
++			.vbp = _vbp, \
++			.vpw = _vpw, \
++			.flags = _flags \
++		} \
++	}
++
++static struct lcd_getek_board {
++	uint32_t id;
++	char name[32];
++	struct lcd_getek_mode mode;
++} lcd_getek_b[] = {
++	GETEK_PANEL(LCD_GETEK_SATOZ_SAT043AT40D09RH, "LCD-SATOZ-SAT043AT40D09RH", 9000, 480, 8, 39, 4, 272, 4, 8, 8, 0),
++};
++
++struct getek_panel_priv {
++	struct udevice *reg;
++	struct udevice *backlight;
++	struct gpio_desc enable;
++};
++
++static int getek_panel_get_display_timing(struct udevice *dev,
++					      struct display_timing *timing)
++{
++	struct getek_panel_priv *priv = dev_get_priv(dev);
++	struct lcd_getek_mode *mode =
++		(struct lcd_getek_mode *)lcd_getek_b;
++
++	memset(timing, 0, sizeof(*timing));
++
++	timing->pixelclock.typ = mode->pixelclock * 1000;
++	timing->pixelclock.min = timing->pixelclock.typ;
++	timing->pixelclock.max = timing->pixelclock.typ;
++
++	timing->hactive.typ = mode->hactive;
++	timing->hactive.min = timing->hactive.typ;
++	timing->hactive.max = timing->hactive.typ;
++
++	timing->hfront_porch.typ = mode->hfp;
++	timing->hfront_porch.min = timing->hfront_porch.typ;
++	timing->hfront_porch.max = timing->hfront_porch.typ;
++
++	timing->hback_porch.typ = mode->hbp;
++	timing->hback_porch.min = timing->hback_porch.typ;
++	timing->hback_porch.max = timing->hback_porch.typ;
++
++	timing->hsync_len.typ = mode->hpw;
++	timing->hsync_len.min = timing->hsync_len.typ;
++	timing->hsync_len.max = timing->hsync_len.typ;
++
++	timing->vactive.typ = mode->vactive;
++	timing->vactive.min = timing->vactive.typ;
++	timing->vactive.max = timing->vactive.typ;
++
++	timing->vfront_porch.typ = mode->vfp;
++	timing->vfront_porch.min = timing->vfront_porch.typ;
++	timing->vfront_porch.max = timing->vfront_porch.typ;
++
++	timing->vback_porch.typ = mode->vbp;
++	timing->vback_porch.min = timing->vback_porch.typ;
++	timing->vback_porch.max = timing->vback_porch.typ;
++
++	timing->vsync_len.typ = mode->vpw;
++	timing->vsync_len.min = timing->vsync_len.typ;
++	timing->vsync_len.max = timing->vsync_len.typ;
++
++	timing->flags = mode->flags;
++	timing->hdmi_monitor = false;
++
++	return 0;
++}
++
++static int getek_panel_enable_backlight(struct udevice *dev)
++{
++	struct getek_panel_priv *priv = dev_get_priv(dev);
++	int ret;
++
++	debug("%s: start, backlight = '%s'\n", __func__, priv->backlight->name);
++	dm_gpio_set_value(&priv->enable, 1);
++	ret = backlight_enable(priv->backlight);
++	debug("%s: done, ret = %d\n", __func__, ret);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static int getek_panel_set_backlight(struct udevice *dev, int percent)
++{
++	struct getek_panel_priv *priv = dev_get_priv(dev);
++	int ret;
++
++	debug("%s: start, backlight = '%s'\n", __func__, priv->backlight->name);
++	dm_gpio_set_value(&priv->enable, 1);
++	ret = backlight_set_brightness(priv->backlight, percent);
++	debug("%s: done, ret = %d\n", __func__, ret);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static int getek_panel_ofdata_to_platdata(struct udevice *dev)
++{
++	struct getek_panel_priv *priv = dev_get_priv(dev);
++	int ret;
++
++	if (IS_ENABLED(CONFIG_DM_REGULATOR)) {
++		ret = uclass_get_device_by_phandle(UCLASS_REGULATOR, dev,
++						   "power-supply", &priv->reg);
++		if (ret) {
++			debug("%s: Warning: cannot get power supply: ret=%d\n",
++			      __func__, ret);
++			if (ret != -ENOENT)
++				return ret;
++		}
++	}
++	ret = uclass_get_device_by_phandle(UCLASS_PANEL_BACKLIGHT, dev,
++					   "backlight", &priv->backlight);
++	if (ret) {
++		debug("%s: Cannot get backlight: ret=%d\n", __func__, ret);
++		return log_ret(ret);
++	}
++	ret = gpio_request_by_name(dev, "enable-gpios", 0, &priv->enable,
++				   GPIOD_IS_OUT);
++	if (ret) {
++		debug("%s: Warning: cannot get enable GPIO: ret=%d\n",
++		      __func__, ret);
++		if (ret != -ENOENT)
++			return log_ret(ret);
++	}
++
++	return 0;
++}
++
++static int getek_panel_probe(struct udevice *dev)
++{
++	struct getek_panel_priv *priv = dev_get_priv(dev);
++	struct udevice *chip;
++	u32 crc, i, id = LCD_GETEK_SATOZ_SAT043AT40D09RH;
++	int ret;
++
++	if (!id)
++		return -ENODEV;
++
++	for (i = 0; i < ARRAY_SIZE(lcd_getek_b); i++) {
++		if (lcd_getek_b[i].id == id) {
++			printf("LCD: %s\n", lcd_getek_b[i].name);
++			return 0;
++		}
++	}
++
++	return -ENODEV;
++
++	return 0;
++}
++
++static const struct panel_ops getek_panel_ops = {
++	.get_display_timing	= getek_panel_get_display_timing,
++	.enable_backlight	= getek_panel_enable_backlight,
++	.set_backlight		= getek_panel_set_backlight,
++};
++
++static const struct udevice_id getek_panel_ids[] = {
++	{ .compatible = "getek,lcd-getek" },
++	{ }
++};
++
++U_BOOT_DRIVER(getek_panel) = {
++	.name	= "getek_panel",
++	.id	= UCLASS_PANEL,
++	.of_match = getek_panel_ids,
++	.ops	= &getek_panel_ops,
++	.ofdata_to_platdata	= getek_panel_ofdata_to_platdata,
++	.probe		= getek_panel_probe,
++	.priv_auto_alloc_size	= sizeof(struct getek_panel_priv),
++};
+diff --git a/drivers/video/sunxi/lcdc.c b/drivers/video/sunxi/lcdc.c
+index e1a5a8b..d4320ff 100644
+--- a/drivers/video/sunxi/lcdc.c
++++ b/drivers/video/sunxi/lcdc.c
+@@ -13,8 +13,10 @@
+ #include <asm/arch/lcdc.h>
+ #include <asm/io.h>
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ #include "../../../board/olimex/common/lcd_olinuxino.h"
++#elif defined(LCD_GETEK)
++#include "../../../board/getek/common/lcd_getek.h"
+ #endif
+ 
+ static int lcdc_get_clk_delay(const struct display_timing *mode, int tcon)
+@@ -48,10 +50,15 @@ void lcdc_init(struct sunxi_lcdc_reg * const lcdc)
+ void lcdc_enable(struct sunxi_lcdc_reg * const lcdc, int depth)
+ {
+ 	setbits_le32(&lcdc->ctrl, SUNXI_LCDC_CTRL_TCON_ENABLE);
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	if (lcd_olinuxino_interface() != LCD_OLINUXINO_IF_LVDS)
+ 		return;
+ 
++#elif defined(LCD_GETEK)
++	if (lcd_getek_interface() != LCD_GETEK_IF_LVDS)
++		return;
++#endif
++
+ 	setbits_le32(&lcdc->tcon0_lvds_intf, SUNXI_LCDC_TCON0_LVDS_INTF_ENABLE);
+ 	setbits_le32(&lcdc->lvds_ana0, SUNXI_LCDC_LVDS_ANA0);
+ #ifdef CONFIG_SUNXI_GEN_SUN6I
+@@ -101,8 +108,10 @@ void lcdc_tcon0_mode_set(struct sunxi_lcdc_reg * const lcdc,
+ 			 int clk_div, bool for_ext_vga_dac,
+ 			 int depth, int dclk_phase)
+ {
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	struct lcd_olinuxino_board *lcd = lcd_olinuxino_get_data();
++#elif defined(LCD_GETEK)
++	struct lcd_getek_board *lcd = lcd_getek_get_data();
+ #endif
+ 	int bp, clk_delay, total, val, ch = 0;
+ 
+@@ -132,7 +141,7 @@ void lcdc_tcon0_mode_set(struct sunxi_lcdc_reg * const lcdc,
+ 	writel(SUNXI_LCDC_TCON0_TIMING_V_TOTAL(total) |
+ 	       SUNXI_LCDC_TCON0_TIMING_V_BP(bp), &lcdc->tcon0_timing_v);
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	if (lcd_olinuxino_interface() == LCD_OLINUXINO_IF_PARALLEL) {
+ 		writel(SUNXI_LCDC_X(mode->hsync_len.typ) |
+ 		       SUNXI_LCDC_Y(mode->vsync_len.typ), &lcdc->tcon0_timing_sync);
+@@ -148,6 +157,22 @@ void lcdc_tcon0_mode_set(struct sunxi_lcdc_reg * const lcdc,
+ 		       SUNXI_LCDC_TCON0_LVDS_INTF_MODE(0) |
+ 		       SUNXI_LCDC_TCON0_LVDS_CLK_SEL_TCON0, &lcdc->tcon0_lvds_intf);
+ 	}
++#elif defined(LCD_GETEK)
++	if (lcd_getek_interface() == LCD_GETEK_IF_PARALLEL) {
++		writel(SUNXI_LCDC_X(mode->hsync_len.typ) |
++		       SUNXI_LCDC_Y(mode->vsync_len.typ), &lcdc->tcon0_timing_sync);
++
++		writel(0, &lcdc->tcon0_hv_intf);
++		writel(0, &lcdc->tcon0_cpu_intf);
++	} else {
++		val = (depth == 18) ? 1 : 0;
++		if (lcd->id == LCD_GETEK_SATOZ_SAT043AT40D09RH)
++			ch = 1;
++		writel(SUNXI_LCDC_TCON0_LVDS_INTF_CH(ch) |
++		       SUNXI_LCDC_TCON0_LVDS_INTF_BITWIDTH(val) |
++		       SUNXI_LCDC_TCON0_LVDS_INTF_MODE(0) |
++		       SUNXI_LCDC_TCON0_LVDS_CLK_SEL_TCON0, &lcdc->tcon0_lvds_intf);
++	}
+ #else
+ #if defined(CONFIG_VIDEO_LCD_IF_PARALLEL) || defined(CONFIG_VIDEO_DE2)
+ 	writel(SUNXI_LCDC_X(mode->hsync_len.typ) |
+@@ -272,7 +297,7 @@ void lcdc_pll_set(struct sunxi_ccm_reg *ccm, int tcon, int dotclock,
+ #endif
+ 
+ 	if (tcon == 0) {
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	if (lcd_olinuxino_interface() == LCD_OLINUXINO_IF_PARALLEL) {
+ 		min_m = 6;
+ 		max_m = 127;
+@@ -280,6 +305,14 @@ void lcdc_pll_set(struct sunxi_ccm_reg *ccm, int tcon, int dotclock,
+ 		min_m = 7;
+ 		max_m = 7;
+ 	}
++#elif defined(LCD_GETEK)
++	if (lcd_getek_interface() == LCD_GETEK_IF_PARALLEL) {
++		min_m = 6;
++		max_m = 127;
++	} else {
++		min_m = 7;
++		max_m = 7;
++	}
+ #else
+ #if defined(CONFIG_VIDEO_LCD_IF_PARALLEL) || defined(CONFIG_SUNXI_DE2)
+ 		min_m = 6;
+diff --git a/drivers/video/sunxi/sunxi_display.c b/drivers/video/sunxi/sunxi_display.c
+index 678f541..e1b738c 100644
+--- a/drivers/video/sunxi/sunxi_display.c
++++ b/drivers/video/sunxi/sunxi_display.c
+@@ -31,10 +31,14 @@
+ #include "../ssd2828.h"
+ #include "simplefb_common.h"
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ #include "../../../board/olimex/common/boards.h"
+ #include "../../../board/olimex/common/board_detect.h"
+ #include "../../../board/olimex/common/lcd_olinuxino.h"
++#elif defined(LCD_GETEK)
++#include "../../../board/getek/common/boards.h"
++#include "../../../board/getek/common/board_detect.h"
++#include "../../../board/getek/common/lcd_getek.h"
+ #endif
+ 
+ #ifdef CONFIG_VIDEO_LCD_BL_PWM_ACTIVE_LOW
+@@ -541,8 +545,13 @@ static void sunxi_lcdc_init(void)
+ 
+ 	/* Clock on */
+ 	setbits_le32(&ccm->ahb_gate1, 1 << AHB_GATE_OFFSET_LCD0);
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO) || defined(LCD_GETEK)
++#if defined(LCD_OLINUXINO)
+ 	if (lcd_olinuxino_interface() == LCD_OLINUXINO_IF_LVDS)
++#elif defined(LCD_GETEK)
++	if (lcd_getek_interface() == LCD_GETEK_IF_LVDS)
++#endif
++
+ #ifdef CONFIG_SUNXI_GEN_SUN6I
+ 	setbits_le32(&ccm->ahb_reset2_cfg, 1 << AHB_RESET_OFFSET_LVDS);
+ #else
+@@ -565,8 +574,10 @@ static void sunxi_lcdc_panel_enable(void)
+ {
+ 	int pin, reset_pin;
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	struct lcd_olinuxino_board *lcd = lcd_olinuxino_get_data();
++#elif defined(LCD_GETEK)
++	struct lcd_getek_board *lcd = lcd_getek_get_data();
+ #else
+ 	/*
+ 	 * Start with backlight disabled to avoid the screen flashing to
+@@ -580,7 +591,7 @@ static void sunxi_lcdc_panel_enable(void)
+ #endif
+ 
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	pin = sunxi_name_to_gpio(olimex_get_lcd_pwm_pin());
+ 	if (pin >= 0) {
+ 		gpio_request(pin, "lcd_backlight_pwm");
+@@ -593,6 +604,16 @@ static void sunxi_lcdc_panel_enable(void)
+ 
+ 	reset_pin = -1;
+ 
++#elif defined(LCD_GETEK)
++	pin = sunxi_name_to_gpio(getek_get_lcd_pwm_pin());
++	if (pin >= 0) {
++		gpio_request(pin, "lcd_backlight_pwm");
++
++		gpio_direction_output(pin, 1);
++	}
++
++	reset_pin = -1;
++
+ #else
+ 	pin = sunxi_name_to_gpio(CONFIG_VIDEO_LCD_BL_PWM);
+ 	if (pin >= 0) {
+@@ -608,9 +629,11 @@ static void sunxi_lcdc_panel_enable(void)
+ #endif
+ 
+ 	/* Give the backlight some time to turn off and power up the panel. */
+-	mdelay(40);
+-#ifdef LCD_OLINUXINO
++	mdelay(0);
++#if defined(LCD_OLINUXINO)
+ 	pin = sunxi_name_to_gpio(olimex_get_lcd_pwr_pin());
++#elif defined(LCD_GETEK)
++	pin = sunxi_name_to_gpio(getek_get_lcd_pwr_pin());
+ #else
+ 	pin = sunxi_name_to_gpio(CONFIG_VIDEO_LCD_POWER);
+ #endif
+@@ -626,17 +649,19 @@ static void sunxi_lcdc_panel_enable(void)
+ static void sunxi_lcdc_backlight_enable(void)
+ {
+ 	int pin;
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	struct lcd_olinuxino_board *lcd = lcd_olinuxino_get_data();
++#elif defined(LCD_GETEK)
++	struct lcd_getek_board *lcd = lcd_getek_get_data();
+ #endif
+ 
+ 	/*
+ 	 * We want to have scanned out at least one frame before enabling the
+ 	 * backlight to avoid the screen flashing to white when we enable it.
+ 	 */
+-	mdelay(40);
++	mdelay(0);
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	pin = sunxi_name_to_gpio(olimex_get_lcd_pwm_pin());
+ 	if (pin >= 0) {
+ 		if (lcd->id == 7894)
+@@ -644,6 +669,11 @@ static void sunxi_lcdc_backlight_enable(void)
+ 		else
+ 			gpio_direction_output(pin, 0);
+ 	}
++#elif defined(LCD_GETEK)
++	pin = sunxi_name_to_gpio(getek_get_lcd_pwm_pin());
++	if (pin >= 0) {
++		gpio_direction_output(pin, 0);
++	}
+ #else
+ 	pin = sunxi_name_to_gpio(CONFIG_VIDEO_LCD_BL_EN);
+ 	if (pin >= 0)
+@@ -705,7 +735,7 @@ static void sunxi_lcdc_tcon0_mode_set(const struct ctfb_res_modes *mode,
+ 	int clk_div, clk_double, pin;
+ 	struct display_timing timing;
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	if (lcd_olinuxino_interface() == LCD_OLINUXINO_IF_PARALLEL) {
+ 		for (pin = SUNXI_GPD(0); pin <= SUNXI_GPD(27); pin++)
+ 			sunxi_gpio_set_cfgpin(pin, SUNXI_GPD_LCD0);
+@@ -713,6 +743,14 @@ static void sunxi_lcdc_tcon0_mode_set(const struct ctfb_res_modes *mode,
+ 		for (pin = SUNXI_GPD(0); pin <= SUNXI_GPD(19); pin++)
+ 			sunxi_gpio_set_cfgpin(pin, SUNXI_GPD_LVDS0);
+ 	}
++#elif defined(LCD_GETEK)
++	if (lcd_getek_interface() == LCD_GETEK_IF_PARALLEL) {
++		for (pin = SUNXI_GPD(0); pin <= SUNXI_GPD(27); pin++)
++			sunxi_gpio_set_cfgpin(pin, SUNXI_GPD_LCD0);
++	} else {
++		for (pin = SUNXI_GPD(0); pin <= SUNXI_GPD(19); pin++)
++			sunxi_gpio_set_cfgpin(pin, SUNXI_GPD_LVDS0);
++	}
+ #else
+ #if defined CONFIG_MACH_SUN8I && defined CONFIG_VIDEO_LCD_IF_LVDS
+ 	for (pin = SUNXI_GPD(18); pin <= SUNXI_GPD(27); pin++) {
+@@ -734,9 +772,12 @@ static void sunxi_lcdc_tcon0_mode_set(const struct ctfb_res_modes *mode,
+ 		     sunxi_is_composite());
+ 
+ 	sunxi_ctfb_mode_to_display_timing(mode, &timing);
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	lcdc_tcon0_mode_set(lcdc, &timing, clk_div, for_ext_vga_dac,
+ 			    sunxi_display.depth, lcd_olinuxino_dclk_phase());
++#elif defined(LCD_GETEK)
++	lcdc_tcon0_mode_set(lcdc, &timing, clk_div, for_ext_vga_dac,
++			    sunxi_display.depth, lcd_getek_dclk_phase());
+ #else
+ 	lcdc_tcon0_mode_set(lcdc, &timing, clk_div, for_ext_vga_dac,
+ 			    sunxi_display.depth, CONFIG_VIDEO_LCD_DCLK_PHASE);
+@@ -1109,8 +1150,10 @@ static bool sunxi_has_hdmi(void)
+ static bool sunxi_has_lcd(void)
+ {
+ 
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	return lcd_olinuxino_is_present();
++#elif defined(LCD_GETEK)
++	return lcd_getek_is_present();
+ #else
+ 	char *lcd_mode = CONFIG_VIDEO_LCD_MODE;
+ 
+@@ -1163,8 +1206,10 @@ void *video_hw_init(void)
+ 	int i, overscan_offset, overscan_x, overscan_y;
+ 	unsigned int fb_dma_addr;
+ 	char mon[16];
+-#ifdef LCD_OLINUXINO
++#if defined(LCD_OLINUXINO)
+ 	char *lcd_mode = lcd_olinuxino_video_mode();
++#elif defined(LCD_GETEK)
++	char *lcd_mode = lcd_getek_video_mode();
+ #else
+ 	char *lcd_mode = CONFIG_VIDEO_LCD_MODE;
+ #endif

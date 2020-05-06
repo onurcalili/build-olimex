@@ -1,0 +1,139 @@
+diff --git a/arch/arm/dts/sun7i-a20-som204-getek.dts b/arch/arm/dts/sun7i-a20-som204-getek.dts
+new file mode 100644
+index 0000000..0edfda0
+--- /dev/null
++++ b/arch/arm/dts/sun7i-a20-som204-getek.dts
+@@ -0,0 +1,133 @@
++/dts-v1/;
++#include "sun7i-a20.dtsi"
++#include "sunxi-common-regulators.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/pinctrl/sun4i-a10.h>
++
++/ {
++	model = "GETEK A20-SOM204";
++	compatible = "getek,a20-som204", "allwinner,sun7i-a20";
++
++	aliases {
++		serial0 = &uart0;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		/* Leds will be added dynamicly */
++
++	};
++
++	reg_axp_ipsout: axp_ipsout {
++		compatible = "regulator-fixed";
++		regulator-name = "axp-ipsout";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++	};
++};
++
++&i2c0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c0_pins_a>;
++	status = "okay";
++
++	axp209: pmic@34 {
++		compatible = "x-powers,axp209";
++		reg = <0x34>;
++		interrupt-parent = <&nmi_intc>;
++		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++
++		interrupt-controller;
++		#interrupt-cells = <1>;
++
++		acin-supply = <&reg_axp_ipsout>;
++		vin2-supply = <&reg_axp_ipsout>;
++		vin3-supply = <&reg_axp_ipsout>;
++		ldo24in-supply = <&reg_axp_ipsout>;
++		ldo3in-supply = <&reg_axp_ipsout>;
++
++		regulators {
++			vdd_rtc: ldo1 {
++				regulator-min-microvolt = <1300000>;
++				regulator-max-microvolt = <1300000>;
++				regulator-always-on;
++			};
++
++			avcc: ldo2 {
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-always-on;
++			};
++
++			vcc_csi0: ldo3 {
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <3500000>;
++				regulator-always-on;
++			};
++
++			vcc_csi1: ldo4 {
++				regulator-min-microvolt = <1250000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-always-on;
++			};
++
++			vdd_cpu: dcdc2 {
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <2275000>;
++				regulator-always-on;
++			};
++
++			vdd_int: dcdc3 {
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <3500000>;
++				regulator-always-on;
++			};
++		};
++	};
++};
++
++&i2c1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c1_pins_a>;
++	status = "okay";
++
++	eeprom: eeprom@50 {
++		compatible = "atmel,24c16";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
++};
++
++&mmc0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc0_pins_a>;
++	vmmc-supply = <&reg_vcc3v3>;
++	bus-width = <4>;
++	cd-gpios = <&pio 7 1 GPIO_ACTIVE_HIGH>; /* PH1 */
++	cd-inverted;
++	status = "okay";
++};
++
++&pio {
++
++	led_pins_olinuxinolime: led_pins@0 {
++		allwinner,pins = "PH2";
++		allwinner,function = "gpio_out";
++		allwinner,drive = <SUN4I_PINCTRL_20_MA>;
++		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
++	};
++};
++
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_pins_a>;
++	status = "okay";
++};

@@ -1,6 +1,6 @@
 diff --git a/configs/GETEK-SOM204-A20_defconfig b/configs/GETEK-SOM204-A20_defconfig
 new file mode 100644
-index 0000000..a5d7a96
+index 0000000..3641f99
 --- /dev/null
 +++ b/configs/GETEK-SOM204-A20_defconfig
 @@ -0,0 +1,101 @@
@@ -9,8 +9,8 @@ index 0000000..a5d7a96
 +CONFIG_SPL=y
 +CONFIG_MACH_SUN7I=y
 +CONFIG_DRAM_CLK=384
-+CONFIG_DEFAULT_DEVICE_TREE="sun7i-a20-getek"
-+CONFIG_AHCI=y
++CONFIG_DEFAULT_DEVICE_TREE="sun7i-a20-som204-getek"
++# CONFIG_AHCI is not set
 +# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
 +CONFIG_SPL_I2C_SUPPORT=y
 +CONFIG_CMD_DFU=y
@@ -104,4 +104,4 @@ index 0000000..a5d7a96
 +CONFIG_USB_GADGET_PRODUCT_NUM=0x0041
 +# CONFIG_USB_ETHER is not set
 +
-+CONFIG_VIDEO_LCD_PANEL_OLINUXINO=y
++CONFIG_VIDEO_LCD_PANEL_GETEK=y
