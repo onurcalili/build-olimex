@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/sun7i-a20-som204-getek.dts b/arch/arm/boot/dts/sun7i-a20-som204-getek.dts
 new file mode 100644
-index 000000000..e043789a7
+index 000000000..d3b20dedc
 --- /dev/null
 +++ b/arch/arm/boot/dts/sun7i-a20-som204-getek.dts
-@@ -0,0 +1,390 @@
+@@ -0,0 +1,403 @@
 +/dts-v1/;
 +#include "sun7i-a20.dtsi"
 +#include "sunxi-common-regulators.dtsi"
@@ -41,8 +41,6 @@ index 000000000..e043789a7
 +
 +	leds {
 +		compatible = "gpio-leds";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&slb9670rst_pin_som204>;
 +
 +		stat {
 +			label = "a20-som204-evb:green:stat";
@@ -144,6 +142,8 @@ index 000000000..e043789a7
 +	status = "okay";
 +	phy-handle = <&phy3>;
 +
++	/* A20-SOM204 has different phy address */
++	/delete-node/ ethernet-phy@1;
 +	mdio {
 +		compatible = "snps,dwmac-mdio";
 +		#address-cells = <1>;
@@ -194,6 +194,13 @@ index 000000000..e043789a7
 +	};
 +};
 +
++/* Exposed on UEXT */
++&i2c2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c2_pins>;
++	status = "okay";
++};
++
 +&mmc0 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&mmc0_pins>;
@@ -238,7 +245,17 @@ index 000000000..e043789a7
 +	status = "okay";
 +};
 +
++&axp_led {
++	label = "olinuxino:yellow:chgled";
++	status = "okay";
++	x-powers,charger-mode = <0>;
++};
++
 +&battery_power_supply {
++	status = "okay";
++};
++
++&reg_ahci_5v {
 +	status = "okay";
 +};
 +
@@ -287,7 +304,7 @@ index 000000000..e043789a7
 +};
 +
 +&reg_usb0_vbus {
-+	gpio = <&pio 2 17 GPIO_ACTIVE_HIGH>; /* PC17 */
++	gpio = <&pio 1 9 GPIO_ACTIVE_HIGH>; /* PB9 */
 +	status = "okay";
 +};
 +
@@ -305,8 +322,6 @@ index 000000000..e043789a7
 +	pinctrl-0 = <&spi1_pi_pins>,
 +		    <&spi1_cs0_pi_pin>;
 +	status = "okay";
-+	#address-cells = <1>;
-+	#size-cells = <0>;
 +
 +	spidev@0 {
 +		compatible = "spidev";
@@ -322,8 +337,6 @@ index 000000000..e043789a7
 +	pinctrl-0 = <&spi2_pc_pins>,
 +		    <&spi2_cs0_pc_pin>;
 +	status = "okay";
-+	#address-cells = <1>;
-+	#size-cells = <0>;
 +
 +	slb9670:slb9670@0 {
 +		compatible = "infineon,slb9670";
@@ -349,8 +362,8 @@ index 000000000..e043789a7
 +};
 +
 +&usbphy {
-+	usb0_id_det-gpios = <&pio 7 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>; /* PH4 */
-+	usb0_vbus_det-gpios = <&pio 7 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; /* PH5 */
++	usb0_id_det-gpio = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
++	usb0_vbus_det-gpio = <&pio 7 5 GPIO_ACTIVE_HIGH>; /* PH5 */
 +	usb0_vbus_power-supply = <&usb_power_supply>;
 +	usb0_vbus-supply = <&reg_usb0_vbus>;
 +	usb1_vbus-supply = <&reg_usb1_vbus>;
