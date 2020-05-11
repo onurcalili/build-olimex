@@ -1,9 +1,9 @@
 diff --git a/configs/GETEK-SOM204-A20_defconfig b/configs/GETEK-SOM204-A20_defconfig
 new file mode 100644
-index 0000000..3b9dc43
+index 0000000..627ef96
 --- /dev/null
 +++ b/configs/GETEK-SOM204-A20_defconfig
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,102 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_SUNXI=y
 +CONFIG_SPL=y
@@ -72,13 +72,13 @@ index 0000000..3b9dc43
 +
 +CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
 +# CONFIG_PHY_ADDR_ENABLE is not set
-+# CONFIG_ETH_DESIGNWARE is not set
-+# CONFIG_RGMII is not set
-+# CONFIG_SUN7I_GMAC is not set
++CONFIG_ETH_DESIGNWARE=y
++CONFIG_RGMII=y
++CONFIG_SUN7I_GMAC=y
 +# CONFIG_PHY_SMSC is not set
 +# CONFIG_PHY_REALTEK is not set
-+# CONFIG_PHY_MICREL is not set
-+# CONFIG_PHY_MICREL_KSZ90X1 is not set
++CONFIG_PHY_MICREL=y
++CONFIG_PHY_MICREL_KSZ90X1=y
 +CONFIG_AXP_ALDO3_VOLT=2800
 +CONFIG_AXP_ALDO4_VOLT=2800
 +# CONFIG_SCSI is not set
@@ -105,3 +105,4 @@ index 0000000..3b9dc43
 +# CONFIG_USB_ETHER is not set
 +
 +CONFIG_VIDEO_LCD_PANEL_GETEK=y
++CONFIG_CMD_BMP=y

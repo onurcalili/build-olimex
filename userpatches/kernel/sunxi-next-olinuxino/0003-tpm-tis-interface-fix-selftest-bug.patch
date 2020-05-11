@@ -1,0 +1,17 @@
+diff --git a/drivers/char/tpm/tpm-interface.c b/drivers/char/tpm/tpm-interface.c
+index d7a3888ad..bf3558950 100644
+--- a/drivers/char/tpm/tpm-interface.c
++++ b/drivers/char/tpm/tpm-interface.c
+@@ -373,8 +373,11 @@ int tpm_auto_startup(struct tpm_chip *chip)
+ 	if (!(chip->ops->flags & TPM_OPS_AUTO_STARTUP))
+ 		return 0;
+ 
+-	if (chip->flags & TPM_CHIP_FLAG_TPM2)
++	if (chip->flags & TPM_CHIP_FLAG_TPM2) {
+ 		rc = tpm2_auto_startup(chip);
++		/* Fix self test problem auto startup again */
++		rc = tpm2_auto_startup(chip);
++	}
+ 	else
+ 		rc = tpm1_auto_startup(chip);
+ 

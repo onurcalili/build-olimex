@@ -1091,10 +1091,10 @@ index 0000000..92aa228
 +endif
 diff --git a/board/getek/getek_som204_a20/board.c b/board/getek/getek_som204_a20/board.c
 new file mode 100644
-index 0000000..a82d00b
+index 0000000..aeb8556
 --- /dev/null
 +++ b/board/getek/getek_som204_a20/board.c
-@@ -0,0 +1,811 @@
+@@ -0,0 +1,802 @@
 +#include <common.h>
 +#include <dm.h>
 +#include <environment.h>
@@ -1265,7 +1265,7 @@ index 0000000..a82d00b
 +/* add board specific code here */
 +int board_init(void)
 +{
-+	__maybe_unused int id_pfr1, ret, satapwr_pin, macpwr_pin, btpwr_pin;
++	__maybe_unused int id_pfr1, ret, tpmrst_pin;
 +	__maybe_unused struct udevice *dev;
 +
 +	gd->bd->bi_boot_params = (PHYS_SDRAM_0 + 0x100);
@@ -1300,17 +1300,6 @@ index 0000000..a82d00b
 +	axp_gpio_init();
 +
 +	if (getek_eeprom_is_valid()) {
-+		/*
-+		 * Setup SATAPWR
-+		 */
-+		satapwr_pin =  0;/* Sata is disabled sunxi_name_to_gpio("PC3"); */
-+
-+		if(satapwr_pin > 0) {
-+			gpio_request(satapwr_pin, "satapwr");
-+			gpio_direction_output(satapwr_pin, 1);
-+			/* Give attached sata device time to power-up to avoid link timeouts */
-+			mdelay(500);
-+		}
 +
 +#ifdef CONFIG_DM_SPI_FLASH
 +		if (getek_board_has_spi()) {
@@ -1331,11 +1320,10 @@ index 0000000..a82d00b
 +	}
 +	
 +	/* Drive reset pin of SPI-TPM to high. */
-+	sunxi_gpio_set_pull(SUNXI_GPG(3), SUNXI_GPIO_PULL_DOWN);
++	sunxi_gpio_set_pull(SUNXI_GPG(3), SUNXI_GPIO_PULL_UP);
 +	sunxi_gpio_set_drv(SUNXI_GPG(3), 2);
-+	gpio_direction_output(SUNXI_GPG(3), 1);
-+	mdelay(20);
-+	gpio_set_value(SUNXI_GPG(3), 0);
++	gpio_request(tpmrst_pin, "PG3");
++	gpio_direction_output(tpmrst_pin, 0);
 +
 +	return 0;
 +}
@@ -1442,6 +1430,8 @@ index 0000000..a82d00b
 +		}
 +	}
 +
++	mdelay(1000);
++
 +	return 0;
 +}
 +#ifndef CONFIG_SPL_BUILD
@@ -1464,6 +1454,7 @@ index 0000000..a82d00b
 +#ifdef CONFIG_BOARD_EARLY_INIT_R
 +int board_early_init_r(void)
 +{
++	mdelay(1000);
 +#ifdef CONFIG_MMC
 +	mmc_pinmux_setup(0);
 +
