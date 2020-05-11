@@ -1091,10 +1091,10 @@ index 0000000..92aa228
 +endif
 diff --git a/board/getek/getek_som204_a20/board.c b/board/getek/getek_som204_a20/board.c
 new file mode 100644
-index 0000000..367e079
+index 0000000..a82d00b
 --- /dev/null
 +++ b/board/getek/getek_som204_a20/board.c
-@@ -0,0 +1,804 @@
+@@ -0,0 +1,811 @@
 +#include <common.h>
 +#include <dm.h>
 +#include <environment.h>
@@ -1329,6 +1329,13 @@ index 0000000..367e079
 +		}
 +#endif
 +	}
++	
++	/* Drive reset pin of SPI-TPM to high. */
++	sunxi_gpio_set_pull(SUNXI_GPG(3), SUNXI_GPIO_PULL_DOWN);
++	sunxi_gpio_set_drv(SUNXI_GPG(3), 2);
++	gpio_direction_output(SUNXI_GPG(3), 1);
++	mdelay(20);
++	gpio_set_value(SUNXI_GPG(3), 0);
 +
 +	return 0;
 +}
